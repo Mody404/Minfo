@@ -1,6 +1,8 @@
 #!/bin/bash
 
 LOG_FILE="minfo_log.txt"
+REPO_URL="https://github.com/Mody404/Minfo"
+SCRIPT_NAME="minfo.sh"
 
 install_speedtest() {
     sudo apt-get install -y speedtest-cli > /dev/null 2>&1
@@ -9,24 +11,31 @@ install_speedtest() {
 update_and_upgrade() {
     if [[ "$(lsb_release -si)" == "Ubuntu" ]]; then
         echo -e "\e[1;35mUpdating and upgrading Ubuntu...\e[0m"
-        echo "Updating and upgrading Ubuntu..."
         sudo apt-get update
         sudo apt-get upgrade -y
-        echo "Update and upgrade completed for Ubuntu." >&1
     elif [[ "$(lsb_release -si)" == "Debian" ]]; then
         echo -e "\e[1;35mUpdating and upgrading Debian...\e[0m"
-        echo "Updating and upgrading Debian..."
         sudo apt-get update
         sudo apt-get upgrade -y
-        echo "Update and upgrade completed for Debian." >&1
     elif [[ "$(lsb_release -si)" == "CentOS" ]]; then
         echo -e "\e[1;35mUpdating and upgrading CentOS...\e[0m"
-        echo "Updating and upgrading CentOS..."
         sudo yum update -y
         sudo yum upgrade -y
-        echo "Update and upgrade completed for CentOS." >&1
     else
         echo -e "\e[1;31mUnsupported distribution. Update and upgrade manually.\e[0m"
+    fi
+}
+
+check_update() {
+    echo -e "\e[1;35mChecking for updates...\e[0m"
+    git fetch origin main
+
+    if [[ $(git rev-parse HEAD) != $(git rev-parse origin/main) ]]; then
+        echo -e "\e[1;35mNew update available. Updating...\e[0m"
+        git pull origin main
+        exec ./$SCRIPT_NAME
+    else
+        echo -e "\e[1;35mAlready up to date.\e[0m"
     fi
 }
 
@@ -59,8 +68,6 @@ EOF
 
     case $choice in
         [yY])
-            echo -e "\e[1;35mUpdating and upgrading the system...\e[0m"
-            echo "Updating and upgrading the system..."
             update_and_upgrade
             ;;
         *)
@@ -115,4 +122,7 @@ EOF
     speedtest --simple | grep -E "Ping:|Download:|Upload:" || true
 }
 
+# Check for updates and run the latest version
+check_update
+# Display system information
 display_info
